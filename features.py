@@ -2,6 +2,7 @@ import numpy as np
 from sklearn.base import BaseEstimator
 from scipy.special import psi
 from scipy.stats.stats import pearsonr
+from scipy.stats import linregress, ttest_ind, ttest_rel, ks_2samp, kruskal
 
 class FeatureMapper:
     def __init__(self, features):
@@ -64,6 +65,45 @@ def correlation(x, y):
 
 def correlation_magnitude(x, y):
     return abs(correlation(x, y))
+
+def linregress_slope(x, y):
+    return linregress(x, y)[0]
+
+def linregress_int(x, y):
+    return linregress(x, y)[1]
+
+def linregress_r(x, y):
+    return linregress(x, y)[2]
+
+def linregress_p(x, y):
+    return linregress(x, y)[3]
+
+def linregress_std(x, y):
+    return linregress(x, y)[4]
+
+def ttest_ind_t(x, y):
+    return float(ttest_ind(x, y)[0])
+
+def ttest_ind_p(x, y):
+    return ttest_ind(x, y)[1]
+
+def ttest_rel_t(x, y):
+    return float(ttest_rel(x, y)[0])
+
+def ttest_rel_p(x, y):
+    return ttest_rel(x, y)[1]
+
+def ks_2samp_D(x, y):
+    return ks_2samp(x, y)[0]
+
+def ks_2samp_p(x, y):
+    return ks_2samp(x, y)[1]
+
+def kruskal_H(x, y):
+    return kruskal(x, y)[0]
+
+def kruskal_p(x, y):
+    return kruskal(x, y)[1]
 
 class SimpleTransform(BaseEstimator):
     def __init__(self, transformer=identity):
