@@ -41,6 +41,9 @@ class FeatureMapper:
 def identity(x):
     return x
 
+def rng(x):
+    return (np.max(x) - np.min(x))
+
 def count_unique(x):
     return len(set(x))
 
