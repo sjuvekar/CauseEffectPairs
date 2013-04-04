@@ -1,9 +1,12 @@
 import data_io
 import features as f
+import transformed_features as tf
 import numpy as np
 import scipy
 import pickle
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVR
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.pipeline import Pipeline
 
@@ -19,6 +22,8 @@ def feature_extractor():
                 ('B: Min', 'B', f.SimpleTransform(transformer=np.min)),
                 ('A: Range', 'A', f.SimpleTransform(transformer=f.rng)),
                 ('B: Range', 'B', f.SimpleTransform(transformer=f.rng)),
+                ('A: Bollinger', 'A', f.SimpleTransform(transformer=f.bollinger)),
+                ('B: Bollinger', 'B', f.SimpleTransform(transformer=f.bollinger)),
                 ('A: Std', 'A', f.SimpleTransform(transformer=np.std)),
                 ('B: Std', 'B', f.SimpleTransform(transformer=np.std)),
                 ('A: Variation', 'A', f.SimpleTransform(transformer=scipy.stats.variation)),
@@ -29,19 +34,21 @@ def feature_extractor():
                 ('B: Kurtosis', 'B', f.SimpleTransform(transformer=scipy.stats.kurtosis)),
                 ('A: Normalized Entropy', 'A', f.SimpleTransform(transformer=f.normalized_entropy)),
                 ('B: Normalized Entropy', 'B', f.SimpleTransform(transformer=f.normalized_entropy)),
-                ('linregress slope', ['A','B'], f.MultiColumnTransform(f.linregress_slope)),
-                ('linregress int', ['A','B'], f.MultiColumnTransform(f.linregress_int)),
-                ('linregress r', ['A','B'], f.MultiColumnTransform(f.linregress_r)),
-                ('linregress p', ['A','B'], f.MultiColumnTransform(f.linregress_p)),
-                ('linregress std', ['A','B'], f.MultiColumnTransform(f.linregress_std)),
-                #('ttest_ind_t', ['A','B'], f.MultiColumnTransform(f.ttest_ind_t)),
-                #('ttest_ind_p', ['A','B'], f.MultiColumnTransform(f.ttest_ind_p)),
+                ('linregress', ['A','B'], f.MultiColumnTransform(f.linregress)),
+                ('complex_regress', ['A', 'B'], f.MultiColumnTransform(tf.complex_regress)),
+                ('ttest_ind_t', ['A','B'], f.MultiColumnTransform(f.ttest_ind_t)),
+                ('ttest_ind_p', ['A','B'], f.MultiColumnTransform(f.ttest_ind_p)),
                 #('ttest_rel_t', ['A','B'], f.MultiColumnTransform(f.ttest_rel_t)),
                 #('ttest_rel_p', ['A','B'], f.MultiColumnTransform(f.ttest_rel_p)),
-                #('ks_2samp_D', ['A','B'], f.MultiColumnTransform(f.ks_2samp_D)),
-                #('ks_2samp_p', ['A','B'], f.MultiColumnTransform(f.ks_2samp_p)),
-                #('kruskal_H', ['A','B'], f.MultiColumnTransform(f.kruskal_H)),
-                #('kruskal_p', ['A','B'], f.MultiColumnTransform(f.kruskal_p)),
+                ('ks_2samp', ['A','B'], f.MultiColumnTransform(f.ks_2samp)),
+                ('kruskal', ['A','B'], f.MultiColumnTransform(f.kruskal)),
+                ('bartlett', ['A', 'B'], f.MultiColumnTransform(f.bartlett)),
+                ('levene', ['A','B'], f.MultiColumnTransform(f.levene)),
+                ('A: shapiro', 'A', f.SimpleTransform(transformer=f.shapiro)),
+                ('B: shapiro', 'B', f.SimpleTransform(transformer=f.shapiro)),
+                ('fligner', ['A','B'], f.MultiColumnTransform(f.fligner)),
+                ('mood', ['A','B'], f.MultiColumnTransform(f.mood)),
+                ('oneway', ['A','B'], f.MultiColumnTransform(f.oneway)),
                 ('Pearson R', ['A','B'], f.MultiColumnTransform(f.correlation)),
                 ('Pearson R Magnitude', ['A','B'], f.MultiColumnTransform(f.correlation_magnitude)),
                 ('Entropy Difference', ['A','B'], f.MultiColumnTransform(f.entropy_difference))]
@@ -51,10 +58,12 @@ def feature_extractor():
 def get_pipeline():
     features = feature_extractor()
     steps = [("extract_features", features),
+             ("scale", StandardScaler()),
              ("classify", RandomForestRegressor(n_estimators=1024, 
                                                 verbose=2,
                                                 n_jobs=1,
-                                                min_samples_split=10,
+#                                                min_samples_split=10,
+#                                                min_samples_leaf=10,
                                                 random_state=1))]
     return Pipeline(steps)
 

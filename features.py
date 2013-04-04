@@ -2,7 +2,8 @@ import numpy as np
 from sklearn.base import BaseEstimator
 from scipy.special import psi
 from scipy.stats.stats import pearsonr
-from scipy.stats import linregress, ttest_ind, ttest_rel, ks_2samp, kruskal
+from scipy import stats
+import pickle
 
 class FeatureMapper:
     def __init__(self, features):
@@ -34,6 +35,8 @@ class FeatureMapper:
             else:
                 extracted.append(fea)
         if len(extracted) > 1:
+            with open("XXX", "wb") as output:
+                pickle.dump(extracted, output)
             return np.concatenate(extracted, axis=1)
         else: 
             return extracted[0]
@@ -43,6 +46,15 @@ def identity(x):
 
 def rng(x):
     return (np.max(x) - np.min(x))
+
+def bollinger(x):
+    m = np.mean(x)
+    mx = np.max(x)
+    mn = np.min(x)
+    if np.allclose(mx, mn):
+      return (mx - m)
+    else:
+      return ( (mx - m)/(mx - mn) )
 
 def count_unique(x):
     return len(set(x))
@@ -69,44 +81,44 @@ def correlation(x, y):
 def correlation_magnitude(x, y):
     return abs(correlation(x, y))
 
-def linregress_slope(x, y):
-    return linregress(x, y)[0]
-
-def linregress_int(x, y):
-    return linregress(x, y)[1]
-
-def linregress_r(x, y):
-    return linregress(x, y)[2]
-
-def linregress_p(x, y):
-    return linregress(x, y)[3]
-
-def linregress_std(x, y):
-    return linregress(x, y)[4]
+def linregress(x, y):
+    return stats.linregress(x, y)
 
 def ttest_ind_t(x, y):
-    return float(ttest_ind(x, y)[0])
+    return float(stats.ttest_ind(x, y)[0])
 
 def ttest_ind_p(x, y):
-    return ttest_ind(x, y)[1]
+    return stats.ttest_ind(x, y)[1]
 
 def ttest_rel_t(x, y):
-    return float(ttest_rel(x, y)[0])
+    return float(stats.ttest_rel(x, y)[0])
 
 def ttest_rel_p(x, y):
-    return ttest_rel(x, y)[1]
+    return stats.ttest_rel(x, y)[1]
 
-def ks_2samp_D(x, y):
-    return ks_2samp(x, y)[0]
+def ks_2samp(x, y):
+    return stats.ks_2samp(x, y)
 
-def ks_2samp_p(x, y):
-    return ks_2samp(x, y)[1]
+def kruskal(x, y):
+    return stats.kruskal(x, y)
 
-def kruskal_H(x, y):
-    return kruskal(x, y)[0]
+def bartlett(x, y):
+    return stats.bartlett(x, y)
 
-def kruskal_p(x, y):
-    return kruskal(x, y)[1]
+def levene(x, y):
+    return stats.levene(x, y)
+
+def shapiro(x):
+    return stats.shapiro(x)
+
+def fligner(x, y):
+    return stats.fligner(x, y)
+
+def mood(x, y):
+    return stats.mood(x, y)
+
+def oneway(x, y):
+    return stats.oneway(x, y)
 
 class SimpleTransform(BaseEstimator):
     def __init__(self, transformer=identity):
@@ -119,7 +131,11 @@ class SimpleTransform(BaseEstimator):
         return self.transform(X)
 
     def transform(self, X, y=None):
-        return np.array([self.transformer(x) for x in X], ndmin=2).T
+        return_value = np.array([self.transformer(x) for x in X], ndmin=2).T
+        if return_value.shape[1] == 1:
+            return return_value
+        else:
+            return return_value.T
 
 class MultiColumnTransform(BaseEstimator):
     def __init__(self, transformer):
@@ -132,4 +148,8 @@ class MultiColumnTransform(BaseEstimator):
         return self.transform(X)
 
     def transform(self, X, y=None):
-        return np.array([self.transformer(*x[1]) for x in X.iterrows()], ndmin=2).T
+        return_value = np.array([self.transformer(*x[1]) for x in X.iterrows()], ndmin=2).T
+        if return_value.shape[1] == 1:
+            return return_value
+        else:
+            return return_value.T
