@@ -1,71 +1,27 @@
 import data_io
-import features as f
-import transformed_features as tf
-import numpy as np
-import scipy
+import feature_extractor as fe
 import pickle
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVR
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.pipeline import Pipeline
-
-def feature_extractor():
-    features = [('Number of Samples', 'A', f.SimpleTransform(transformer=len)),
-                ('A: Number of Unique Samples', 'A', f.SimpleTransform(transformer=f.count_unique)),
-                ('B: Number of Unique Samples', 'B', f.SimpleTransform(transformer=f.count_unique)),
-                ('A: Mean', 'A', f.SimpleTransform(transformer=np.mean)),
-                ('B: Mean', 'B', f.SimpleTransform(transformer=np.mean)),
-                ('A: Max', 'A', f.SimpleTransform(transformer=np.max)),
-                ('B: Max', 'B', f.SimpleTransform(transformer=np.max)),
-                ('A: Min', 'A', f.SimpleTransform(transformer=np.min)),
-                ('B: Min', 'B', f.SimpleTransform(transformer=np.min)),
-                ('A: Range', 'A', f.SimpleTransform(transformer=f.rng)),
-                ('B: Range', 'B', f.SimpleTransform(transformer=f.rng)),
-                ('A: Bollinger', 'A', f.SimpleTransform(transformer=f.bollinger)),
-                ('B: Bollinger', 'B', f.SimpleTransform(transformer=f.bollinger)),
-                ('A: Std', 'A', f.SimpleTransform(transformer=np.std)),
-                ('B: Std', 'B', f.SimpleTransform(transformer=np.std)),
-                ('A: Variation', 'A', f.SimpleTransform(transformer=scipy.stats.variation)),
-                ('B: Variation', 'B', f.SimpleTransform(transformer=scipy.stats.variation)),
-                ('A: Skew', 'A', f.SimpleTransform(transformer=scipy.stats.skew)),
-                ('B: Skew', 'B', f.SimpleTransform(transformer=scipy.stats.skew)),
-                ('A: Kurtosis', 'A', f.SimpleTransform(transformer=scipy.stats.kurtosis)),
-                ('B: Kurtosis', 'B', f.SimpleTransform(transformer=scipy.stats.kurtosis)),
-                ('A: Normalized Entropy', 'A', f.SimpleTransform(transformer=f.normalized_entropy)),
-                ('B: Normalized Entropy', 'B', f.SimpleTransform(transformer=f.normalized_entropy)),
-                ('linregress', ['A','B'], f.MultiColumnTransform(f.linregress)),
-                ('complex_regress', ['A', 'B'], f.MultiColumnTransform(tf.complex_regress)),
-                ('ttest_ind_t', ['A','B'], f.MultiColumnTransform(f.ttest_ind_t)),
-                ('ttest_ind_p', ['A','B'], f.MultiColumnTransform(f.ttest_ind_p)),
-                #('ttest_rel_t', ['A','B'], f.MultiColumnTransform(f.ttest_rel_t)),
-                #('ttest_rel_p', ['A','B'], f.MultiColumnTransform(f.ttest_rel_p)),
-                ('ks_2samp', ['A','B'], f.MultiColumnTransform(f.ks_2samp)),
-                ('kruskal', ['A','B'], f.MultiColumnTransform(f.kruskal)),
-                ('bartlett', ['A', 'B'], f.MultiColumnTransform(f.bartlett)),
-                ('levene', ['A','B'], f.MultiColumnTransform(f.levene)),
-                ('A: shapiro', 'A', f.SimpleTransform(transformer=f.shapiro)),
-                ('B: shapiro', 'B', f.SimpleTransform(transformer=f.shapiro)),
-                ('fligner', ['A','B'], f.MultiColumnTransform(f.fligner)),
-                ('mood', ['A','B'], f.MultiColumnTransform(f.mood)),
-                ('oneway', ['A','B'], f.MultiColumnTransform(f.oneway)),
-                ('Pearson R', ['A','B'], f.MultiColumnTransform(f.correlation)),
-                ('Pearson R Magnitude', ['A','B'], f.MultiColumnTransform(f.correlation_magnitude)),
-                ('Entropy Difference', ['A','B'], f.MultiColumnTransform(f.entropy_difference))]
-    combined = f.FeatureMapper(features)
-    return combined
+from sklearn.grid_search import GridSearchCV
 
 def get_pipeline():
-    features = feature_extractor()
+    features = fe.feature_extractor()
     steps = [("extract_features", features),
              ("scale", StandardScaler()),
              ("classify", RandomForestRegressor(n_estimators=1024, 
                                                 verbose=2,
                                                 n_jobs=1,
-#                                                min_samples_split=10,
-#                                                min_samples_leaf=10,
+                                                min_samples_split=10,
+                                                min_samples_leaf=10,
                                                 random_state=1))]
-    return Pipeline(steps)
+    p = Pipeline(steps)
+    params = dict(classify__n_estimators=[768, 1024, 1536], classify__min_samples_split=[1, 5, 10], classify__min_samples_leaf= [1, 5, 10])
+    grid_search = GridSearchCV(p, params, n_jobs=8)
+    return grid_search
 
 def main():
     print("Reading in the training data")

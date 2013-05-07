@@ -1,6 +1,7 @@
 import data_io
 import numpy as np
 import pickle
+import feature_extractor as fe 
 
 def historic():
     print("Calculating correlations")
@@ -18,6 +19,7 @@ def historic():
 def main():
     print("Reading the valid pairs") 
     valid = data_io.read_valid_pairs()
+    features = fe.feature_extractor()
 
     print("Loading the classifier")
     classifier = data_io.load_model()

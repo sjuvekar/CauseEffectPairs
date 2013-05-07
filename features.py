@@ -3,11 +3,14 @@ from sklearn.base import BaseEstimator
 from scipy.special import psi
 from scipy.stats.stats import pearsonr
 from scipy import stats
-import pickle
+import copy
 
 class FeatureMapper:
     def __init__(self, features):
         self.features = features
+
+    def get_params(self, deep=1):
+        return {"features": self.features}
 
     def fit(self, X, y=None):
         for feature_name, column_names, extractor in self.features:
@@ -35,8 +38,6 @@ class FeatureMapper:
             else:
                 extracted.append(fea)
         if len(extracted) > 1:
-            with open("XXX", "wb") as output:
-                pickle.dump(extracted, output)
             return np.concatenate(extracted, axis=1)
         else: 
             return extracted[0]
@@ -46,6 +47,19 @@ def identity(x):
 
 def rng(x):
     return (np.max(x) - np.min(x))
+
+def median(x):
+    return np.median(x)
+
+def percentile(x, q):
+    return np.percentile(x, q)
+
+def percentile25(x):
+    return np.percentile(x, 25)
+
+def percentile75(x):
+    return np.percentile(x, 75)
+
 
 def bollinger(x):
     m = np.mean(x)

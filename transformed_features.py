@@ -1,4 +1,5 @@
 from scipy.stats import linregress
+from sklearn import metrics
 import numpy as np
 
 # Methods to transform an array
@@ -48,4 +49,13 @@ def complex_regress(x, y):
     for y_deg in range(1, 4):
         features = features + list(sigmoidx_linregress(x, y, x_deg))
 
+    return features
+
+def mutual_information(x, y):
+    features = []
+    features.append(metrics.adjusted_mutual_info_score(x, y))
+    features.append(metrics.adjusted_rand_score(x, y)) 
+    features = features + list(metrics.homogeneity_completeness_v_measure(x, y))
+    features.append(metrics.mutual_info_score(x, y))
+    features.append(metrics.normalized_mutual_info_score(x, y))
     return features
