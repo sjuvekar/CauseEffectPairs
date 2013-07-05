@@ -1,7 +1,7 @@
 from sklearn.decomposition import FastICA
 import numpy as np
 
-def independent_component(x, y):
+def independent_component( (x, y) ):
     lenX = len(x)
     newX = np.array(x).reshape(lenX, 1)
     g = FastICA()

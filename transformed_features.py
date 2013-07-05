@@ -35,7 +35,7 @@ def sigmoidy_linregress(x, x_deg, y):
 
 
 # Finally transform the input into all polynomial combination linear regression coefficients
-def complex_regress(x, y):
+def complex_regress( (x, y) ):
     features = []
     for x_deg in range(1, 4):
         for y_deg in range(1, 4):
@@ -47,15 +47,21 @@ def complex_regress(x, y):
         features = features + list(sigmoidy_linregress(x, x_deg, y))
 
     for y_deg in range(1, 4):
-        features = features + list(sigmoidx_linregress(x, y, x_deg))
+        features = features + list(sigmoidx_linregress(x, y, y_deg))
 
     return features
 
-def mutual_information(x, y):
-    features = []
-    features.append(metrics.adjusted_mutual_info_score(x, y))
-    features.append(metrics.adjusted_rand_score(x, y)) 
-    features = features + list(metrics.homogeneity_completeness_v_measure(x, y))
-    features.append(metrics.mutual_info_score(x, y))
-    features.append(metrics.normalized_mutual_info_score(x, y))
-    return features
+def adjusted_mutual_information( (x, y) ):
+    return metrics.adjusted_mutual_info_score(x, y)
+
+def adjusted_rand( (x, y) ):
+    return metrics.adjusted_rand_score(x, y)
+
+def mutual_information( (x, y) ):
+    return metrics.mutual_info_score(x, y)
+
+def homogeneity_completeness( (x, y) ):
+    return list(metrics.homogeneity_completeness_v_measure(x, y))
+
+def normalized_mutual_information( (x, y) ):
+    return metrics.normalized_mutual_info_score(x, y)

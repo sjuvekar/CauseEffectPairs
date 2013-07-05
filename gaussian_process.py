@@ -4,25 +4,34 @@ import independent_component as indcomp
 from scipy.stats import pearsonr
 
 def gaussian_fit_likelihood(x, y):
-    nrow = len(x)
-    # Add random noise to data to remove duplicates
-    newX = np.array(x + np.random.rand(nrow) / 100)
-    newY = np.array(y + np.random.rand(nrow) / 100)
-    newX = newX.reshape(nrow, 1)
-    newY = newY.reshape(nrow, 1)
-    ret = [-1.0, -1.0, 0.0, 0.0]
-    try:
-      g = GaussianProcess()
+    # Remove duplicates
+    n_dupl = 0
+    d = dict()
+    for i in range(len(x)):
+      try:
+        if d[x[i]] != y[i]:
+          n_dupl += 1
+          d.pop(x[i], None)
+      except:
+        d[x[i]] = y[i]
+
+    ret = [n_dupl]
+
+    try:  
+      newX = np.atleast_2d(d.keys()).T
+      newY = np.array(d.values()).ravel()
+      g = GaussianProcess(theta0=1e5, thetaL=1e-4, thetaU=1e-1)
+      #g = GaussianProcess()
       g.fit(newX, newY)
-      ret[0] = g.reduced_likelihood_function_value_
-      err = y - g.predict(newX)
-      p = pearsonr(err, x)
-      ret[2] = p[0]
-      ret[3] = p[1]
-      g.fit(newY, newX)
-      ret[1] = g.reduced_likelihood_function_value_
-      ind_ret = indcomp.independent_component(x, y)
-      ret = ret + ind_ret
+      err = newY - g.predict(newX)
+      p = pearsonr(err, newX)
+      ret += [g.reduced_likelihood_function_value_]
+      ret += p
     except:
-      return [-1.0, -1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]
+      #fp = open("bad_pt.txt", "a")
+      #fp.write("1")
+      #fp.close()
+      ret += [0.0, 0.0, 0.0]
+   
+    print ret
     return ret

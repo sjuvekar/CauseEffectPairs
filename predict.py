@@ -20,12 +20,19 @@ def main():
     print("Reading the valid pairs") 
     valid = data_io.read_valid_pairs()
     features = fe.feature_extractor()
+    print("Transforming features")
+    trans_valid = features.fit_transform(valid)
+    trans_valid = np.nan_to_num(trans_valid)
+
+    print("Saving Valid Features")
+    data_io.save_features(trans_valid)
 
     print("Loading the classifier")
     classifier = data_io.load_model()
 
     print("Making predictions") 
-    predictions = classifier.predict(valid)
+    orig_predictions = classifier.predict_proba(trans_valid)
+    predictions = orig_predictions[:, 2] - orig_predictions[:, 0]
     predictions = predictions.flatten()
 
     print("Writing predictions to file")
